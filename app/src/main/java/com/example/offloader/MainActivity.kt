@@ -13,9 +13,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.offloader.databinding.ActivityMainBinding
 import com.example.offloader.offloader.OffloadManager
-import com.example.offloader.offloader.data.models.ReadyForWork
-import com.example.offloader.offloader.data.models.UploadTask
-import com.example.offloader.offloader.network.web_socket.OffloadWebSocketManager
+import com.example.offloader.offloader.data.models.*
 import com.example.offloader.offloader.service.ExecutableService
 import com.example.offloader.offloader.service.ServiceConnectionManager
 import com.example.offloader.offloader.util.Constants
@@ -44,14 +42,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
-        val uploadSocketManager = OffloadWebSocketManager(Constants.URLs.GRAB_WEB_SOCKET_URL).apply {
-            initWebSock()
-        }
-
-        uploadSocketManager.state.observe(this) {
-            val toSend = Gson().toJson(ReadyForWork("fasfas"))
-            uploadSocketManager.sendMessage(toSend)
-        }
 
 //        initService()
 
@@ -76,17 +66,15 @@ class MainActivity : AppCompatActivity() {
         viewModel.numbers.observe(this) {
             binding.button.isEnabled = it.isNotEmpty()
         }
+
+
         binding.button.setOnClickListener {
-            val uploadSocketManager = OffloadWebSocketManager(Constants.URLs.UPLOAD_WEB_SOCKET_URL).apply {
-                initWebSock()
+            serviceConnectionManager.offloadManager?.let {
+                val id = it.register(::whatever)
+                println("hashcode: $id  ${it.functions[id]}")
+
+                val res = it.executeRemotely(id, "misa", 23.2 )
             }
-
-            uploadSocketManager.state.observe(this) {
-                val toSend = Gson().toJson(UploadTask("args", "id", "id", "id"))
-                uploadSocketManager.sendMessage(toSend)
-            }
-
-
 
             println("Clicked!")
 //            test(viewModel.numbers.value!!.toMutableList())

@@ -1,13 +1,14 @@
 package com.example.offloader.offloader.network.web_socket
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+class OffloadWebSocketManager(
+    private val serverUrl: String,
+    private val onConnectSuccess: ((instance: OffloadWebSocketManager) -> Unit)? = null,
+    private val onMessage: ((msg: String?) -> Unit)? = null,
+    private val onConnectFailed: (() -> Unit)? = null,
+    private val onClose: (() -> Unit)? = null,
+) : MessageListener {
 
-class OffloadWebSocketManager(private val serverUrl: String) : MessageListener {
-
-    lateinit var webSocketManager: WebSocketManager
-    private val _state: MutableLiveData<Boolean> = MutableLiveData(false)
-    val state: LiveData<Boolean> = _state
+    private lateinit var webSocketManager: WebSocketManager
 
     fun initWebSock() {
         webSocketManager = WebSocketManager()
@@ -15,29 +16,33 @@ class OffloadWebSocketManager(private val serverUrl: String) : MessageListener {
         webSocketManager.connect()
     }
 
-    fun sendMessage(message: String) {
-        webSocketManager.sendMessage( message )
+    fun sendMessage(message: String): Boolean {
+        val isConnected = webSocketManager.isConnect()
+        if (isConnected) webSocketManager.sendMessage(message)
+        return isConnected
     }
 
     override fun onConnectSuccess() {
-        _state.postValue(true)
+        onConnectSuccess?.invoke(this)
         addText( " Connected successfully $serverUrl \n " )
     }
 
     override fun onConnectFailed() {
-        addText( " Connection failed \n " )
+        onConnectFailed?.invoke()
+        addText( " Connection failed $serverUrl\n " )
     }
 
     override fun onClose() {
-        addText( " Closed successfully \n " )
+        onClose?.invoke()
+        addText( " Closed successfully $serverUrl\n " )
     }
 
     override fun onMessage(text: String?) {
+        onMessage?.invoke(text)
         addText( " Receive message: $serverUrl body: $text \n " )
     }
 
     private fun addText(text: String?) {
         println(text)
     }
-
 }
