@@ -16,7 +16,7 @@ import com.example.offloader.offloader.util.Constants
 class ServiceConnectionManager(private val context: Context) {
 
     lateinit var connection: ServiceConnection
-    lateinit var offloadManager: OffloadManager
+    var offloadManager: OffloadManager? = null
 
     fun initService() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

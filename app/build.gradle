@@ -33,6 +33,11 @@ android {
         jvmTarget = '1.8'
     }
 
+    buildTypes.each {
+        it.buildConfigField 'String', 'HTTP_SERVER_URL', httpServerUrl
+        it.buildConfigField 'String', 'WEB_SOCKET_URL', webSocketUrl
+    }
+
     buildFeatures {
         viewBinding true
     }

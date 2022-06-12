@@ -37,11 +37,11 @@ class MainActivityViewModel @Inject constructor(
             sort()
         }
     }
-
-    init {
-        testNetwork()
-        randList()
-    }
+//
+//    init {
+//        testNetwork()
+//        randList()
+//    }
 
     fun testNetwork() = viewModelScope.launch {
         val response = repository.getClusters()

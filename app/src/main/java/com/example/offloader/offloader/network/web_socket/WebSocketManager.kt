@@ -5,10 +5,10 @@ import okhttp3.*
 import okio.ByteString
 import  java.util.concurrent.TimeUnit
 
-object  WebSocketManager {
+class  WebSocketManager {
     private val TAG = WebSocketManager::class.java.simpleName
-    private  const  val  MAX_NUM  =  5  // Maximum number of reconnections
-    private  const  val  MILLIS  =  5000  // Reconnection interval, milliseconds
+    private  val  MAX_NUM  =  5  // Maximum number of reconnections
+    private    val  MILLIS  =  5000  // Reconnection interval, milliseconds
     private lateinit var client: OkHttpClient
     private lateinit var request: Request
     private lateinit var messageListener: MessageListener

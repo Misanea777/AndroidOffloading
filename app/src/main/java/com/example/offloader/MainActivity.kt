@@ -13,10 +13,15 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.offloader.databinding.ActivityMainBinding
 import com.example.offloader.offloader.OffloadManager
+import com.example.offloader.offloader.data.models.ReadyForWork
+import com.example.offloader.offloader.data.models.UploadTask
+import com.example.offloader.offloader.network.web_socket.OffloadWebSocketManager
 import com.example.offloader.offloader.service.ExecutableService
 import com.example.offloader.offloader.service.ServiceConnectionManager
+import com.example.offloader.offloader.util.Constants
 import com.example.offloader.offloader.util.Constants.CHANNEL_ID
 import com.example.offloader.offloader.util.LocalResource
+import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -25,9 +30,11 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
+    private lateinit var serviceConnectionManager: ServiceConnectionManager
+
     private lateinit var connection: ServiceConnection
 
-    private lateinit var offloadManager: OffloadManager
+    var offloadManager: OffloadManager? = null
 
     private val viewModel by viewModels<MainActivityViewModel>()
 
@@ -37,10 +44,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
+        val uploadSocketManager = OffloadWebSocketManager(Constants.URLs.GRAB_WEB_SOCKET_URL).apply {
+            initWebSock()
+        }
+
+        uploadSocketManager.state.observe(this) {
+            val toSend = Gson().toJson(ReadyForWork("fasfas"))
+            uploadSocketManager.sendMessage(toSend)
+        }
 
 //        initService()
 
-        val serviceConnectionManager = ServiceConnectionManager(this)
+        serviceConnectionManager = ServiceConnectionManager(this)
         serviceConnectionManager.initService()
 
         connection = serviceConnectionManager.connection
@@ -58,9 +73,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initListeners() {
+        viewModel.numbers.observe(this) {
+            binding.button.isEnabled = it.isNotEmpty()
+        }
         binding.button.setOnClickListener {
+            val uploadSocketManager = OffloadWebSocketManager(Constants.URLs.UPLOAD_WEB_SOCKET_URL).apply {
+                initWebSock()
+            }
+
+            uploadSocketManager.state.observe(this) {
+                val toSend = Gson().toJson(UploadTask("args", "id", "id", "id"))
+                uploadSocketManager.sendMessage(toSend)
+            }
+
+
+
             println("Clicked!")
-//            test(nums)
+//            test(viewModel.numbers.value!!.toMutableList())
         }
     }
 
@@ -99,12 +128,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun test(list: MutableList<Int>) {
-        val id = offloadManager.register(viewModel::sort)
+        serviceConnectionManager.offloadManager?.let {
+            println("executing...")
+            val id = it.register(viewModel::sort)
 
-        val res = offloadManager.execute(id, list)
-        when(res) {
-            is LocalResource.Success -> println(res.value)
-            is LocalResource.Failure -> println(res.throwable.message)
+            val res = it.execute(id, list)
+            when(res) {
+                is LocalResource.Success -> println(res.value)
+                is LocalResource.Failure -> println(res.throwable.message)
+            }
         }
     }
 

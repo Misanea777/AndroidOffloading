@@ -1,19 +1,27 @@
 package com.example.offloader.offloader.network.web_socket
 
-class OffloadWebSocketManager : MessageListener {
-    fun initWebSock() {
-        val serverUrl = "ws://immense-brushlands-80363.herokuapp.com/websocket"
-        WebSocketManager.init(serverUrl, this)
-        WebSocketManager.connect()
-        WebSocketManager .sendMessage( " Client send " )
-        WebSocketManager .sendMessage( " Client send " )
-        WebSocketManager .sendMessage( " Client send " )
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 
+class OffloadWebSocketManager(private val serverUrl: String) : MessageListener {
+
+    lateinit var webSocketManager: WebSocketManager
+    private val _state: MutableLiveData<Boolean> = MutableLiveData(false)
+    val state: LiveData<Boolean> = _state
+
+    fun initWebSock() {
+        webSocketManager = WebSocketManager()
+        webSocketManager.init(serverUrl, this)
+        webSocketManager.connect()
     }
 
+    fun sendMessage(message: String) {
+        webSocketManager.sendMessage( message )
+    }
 
     override fun onConnectSuccess() {
-        addText( " Connected successfully \n " )
+        _state.postValue(true)
+        addText( " Connected successfully $serverUrl \n " )
     }
 
     override fun onConnectFailed() {
@@ -25,8 +33,7 @@ class OffloadWebSocketManager : MessageListener {
     }
 
     override fun onMessage(text: String?) {
-        println("message received: $text")
-        addText( " Receive message: $text \n " )
+        addText( " Receive message: $serverUrl body: $text \n " )
     }
 
     private fun addText(text: String?) {
