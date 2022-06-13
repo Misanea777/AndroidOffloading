@@ -13,13 +13,13 @@ data class UploadTask(
     val task_id: String
 )
 
-fun buildUploadTaskAsJson(context: Context, hashCode: Int, vararg params: Any?): String {
+fun buildUploadTaskAsJson(context: Context, hashCode: String, vararg params: Any?): String {
     val argsAsJson = params.map { Gson().toJson(it) }.toTypedArray()
     val taskToUpload = UploadTask(
         args = argsAsJson,
         cluster_id = "some id",
         device_id = getMacAddress(context),
-        hash = hashCode.toString(),
+        hash = hashCode,
         task_id = getUUID()
     )
     return Gson().toJson(taskToUpload)

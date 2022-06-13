@@ -15,7 +15,7 @@ class OffloadManager(val context: Context) {
 
     val systemResourceMonitor = SystemResourceMonitor(context)
 
-    val functions = HashMap<Int, KFunction<Any>>()
+    val functions = HashMap<String, KFunction<Any>>()
 
     private val uploadWebSocketManager = OffloadWebSocketManager(
         Constants.URLs.UPLOAD_WEB_SOCKET_URL,
@@ -46,19 +46,19 @@ class OffloadManager(val context: Context) {
         initWebSock()
     }
 
-    fun execute(hashCode: Int, vararg params: Any?) = safeFunctionCall<Any> {
+    fun execute(hashCode: String, vararg params: Any?) = safeFunctionCall<Any> {
         val function = functions[hashCode]!!
         val deferredFunction = DeferredFunction(function, *params)
         deferredFunction.invoke()
     }
 
-    fun executeRemotely(hashCode: Int, vararg params: Any?) {
+    fun executeRemotely(hashCode: String, vararg params: Any?) {
         val toUpload = buildUploadTaskAsJson(context, hashCode, *params)
         uploadWebSocketManager.sendMessage(toUpload)
     }
 
-    fun register(function: KFunction<Any>): Int {
-        val hashCode = function.hashCode()
+    fun register(function: KFunction<Any>): String {
+        val hashCode = function.name.md5()
         functions[hashCode] = function
         return hashCode
     }
@@ -85,7 +85,7 @@ class OffloadManager(val context: Context) {
 
     fun executeReceivedTask(task: ReceivedTask) {
         println("Executing remote task...")
-        val hash = task.hash.toInt()
+        val hash = task.hash
 
 
         val function = functions[hash]!!
