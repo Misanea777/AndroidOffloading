@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
 //        initService()
 
         serviceConnectionManager = ServiceConnectionManager(this)
-        serviceConnectionManager.initService()
+        serviceConnectionManager.initService(listOf(::whatever))
 
         connection = serviceConnectionManager.connection
         offloadManager = serviceConnectionManager.offloadManager
@@ -66,7 +66,9 @@ class MainActivity : AppCompatActivity() {
         viewModel.numbers.observe(this) {
             binding.button.isEnabled = it.isNotEmpty()
             serviceConnectionManager.offloadManager?.let {
+                println("register hash")
                 val id = it.register(::whatever)
+                println("hashcode: $id  ${it.functions[id]}")
             }
         }
 
