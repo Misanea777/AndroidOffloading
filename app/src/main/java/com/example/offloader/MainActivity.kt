@@ -65,6 +65,9 @@ class MainActivity : AppCompatActivity() {
     private fun initListeners() {
         viewModel.numbers.observe(this) {
             binding.button.isEnabled = it.isNotEmpty()
+            serviceConnectionManager.offloadManager?.let {
+                val id = it.register(::whatever)
+            }
         }
 
 
