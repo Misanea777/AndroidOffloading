@@ -39,7 +39,7 @@ class NetworkStateMonitor(context: Context) {
 
             setNetworkStatus()
 
-            println(isUnmetered)
+            println("isUnmetered: ${isUnmetered}")
         }
 
         override fun onLost(network: Network) {

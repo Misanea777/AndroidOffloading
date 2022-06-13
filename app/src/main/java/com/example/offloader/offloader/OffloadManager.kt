@@ -28,7 +28,15 @@ class OffloadManager(val context: Context) {
     private val grabWebSocketManager = OffloadWebSocketManager(
         Constants.URLs.GRAB_WEB_SOCKET_URL,
         onConnectSuccess = {
-            getNewTask()
+            val mainHandler = Handler(Looper.getMainLooper())
+            mainHandler.postDelayed(
+                object : Runnable {
+                    override fun run() {
+                        getNewTask()
+                        mainHandler.postDelayed(this, 5000)
+                    }
+                },
+                0)
         },
         onMessage = {
             println("Received in grab: $it")
@@ -56,24 +64,18 @@ class OffloadManager(val context: Context) {
     }
 
 
-//    val mainHandler = Handler(Looper.getMainLooper())
-//    init {
-//        mainHandler.postDelayed(
-//            object : Runnable {
-//                override fun run() {
-//                    getNewTask()
-//                    mainHandler.postDelayed(this, 5000)
-//                }
-//            },
-//            0)
-//    }
+
+    var wasExecuted = true
 
 
     private fun getNewTask() {
-        val result = safeFunctionCall {
+        val result = if(wasExecuted) safeFunctionCall {
             val readyMsg = ReadyForWork("test cluster")
             grabWebSocketManager.sendMessage(Gson().toJson(readyMsg))
-        }
+            wasExecuted = false
+        } else null
+
+        if (result == null) println("Offloader is full")
 
         when (result) {
             is LocalResource.Success -> println("Getting new task...")
@@ -83,26 +85,30 @@ class OffloadManager(val context: Context) {
 
     fun executeReceivedTask(task: ReceivedTask) {
         println("Executing remote task...")
+        val hash = task.hash.toInt()
 
-        println("fun : ${functions[task.hashCode()]}")
-//
-//        val function = functions[task.hashCode()]!!
-//        val args = task.args.map { it as Any? }.toTypedArray()
-//        val deferredFunction = DeferredFunction(function, *args)
-//        val funcResult = deferredFunction.invoke<Any>()
-//
-//        println("func res: $funcResult")
+
+        val function = functions[hash]!!
+        val args = task.getArgs()
+        val deferredFunction = DeferredFunction(function, *args)
+        val funcResult = deferredFunction.invoke<Any>()
+
 
         val taskResult = TaskResult(
             id = task.id,
-            result = "funcResult",
+            result = funcResult,
             task_id = task.task_id
         )
 
         val converted = Gson().toJson(taskResult)
         println("Converted : $converted")
         grabWebSocketManager.sendMessage(converted)
-        getNewTask()
+        wasExecuted = true
+    }
+
+    fun freeSockets() {
+        uploadWebSocketManager.close()
+        grabWebSocketManager.close()
     }
 
 

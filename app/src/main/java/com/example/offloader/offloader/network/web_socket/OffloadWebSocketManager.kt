@@ -22,6 +22,10 @@ class OffloadWebSocketManager(
         return isConnected
     }
 
+    fun close() {
+        webSocketManager.close()
+    }
+
     override fun onConnectSuccess() {
         onConnectSuccess?.invoke(this)
         addText( " Connected successfully $serverUrl \n " )

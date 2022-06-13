@@ -17,7 +17,9 @@ class  WebSocketManager {
     private var connectNum = 0
     fun init(url: String, _messageListener: MessageListener) {
         client = OkHttpClient.Builder()
-
+            .writeTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(5, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)
             .build()
         request = Request.Builder().url(url).build()
         messageListener = _messageListener
